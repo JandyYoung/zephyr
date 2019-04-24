@@ -882,7 +882,7 @@ static void state_collect(const struct shell *shell)
 				 * on received NL.
 				 */
 				state_set(shell, SHELL_STATE_ACTIVE);
-				return;
+				continue;
 			}
 
 			switch (data) {
@@ -950,7 +950,7 @@ static void state_collect(const struct shell *shell)
 			receive_state_change(shell, SHELL_RECEIVE_DEFAULT);
 
 			if (!flag_echo_get(shell)) {
-				return;
+				continue;
 			}
 
 			switch (data) {
@@ -1353,6 +1353,28 @@ void shell_fprintf(const struct shell *shell, enum shell_vt100_color color,
 	}
 	transport_buffer_flush(shell);
 	k_mutex_unlock(&shell->ctx->wr_mtx);
+}
+
+void shell_hexdump(const struct shell *shell, const u8_t *data, size_t len)
+{
+	int n = 0;
+
+	while (len--) {
+		if (n % 16 == 0) {
+			shell_fprintf(shell, SHELL_NORMAL, "%08X: ", n);
+		}
+
+		shell_fprintf(shell, SHELL_NORMAL, "%02X ", *data++);
+
+		n++;
+		if (n % 16 == 0) {
+			shell_print(shell, "");
+		}
+	}
+
+	if (n % 16) {
+		shell_print(shell, "");
+	}
 }
 
 int shell_prompt_change(const struct shell *shell, const char *prompt)

@@ -163,6 +163,16 @@ int gpio_stm32_configure(u32_t *base_addr, int pin, int conf, int altf)
 		}
 	}
 
+#if defined(CONFIG_SOC_SERIES_STM32L4X) && defined(GPIO_ASCR_ASC0)
+	/*
+	 * For STM32L47xx/48xx, register ASCR should be configured to connect
+	 * analog switch of gpio lines to the ADC.
+	 */
+	if (mode == STM32_MODER_ANALOG_MODE) {
+		LL_GPIO_EnablePinAnalogControl(gpio, pin_ll);
+	}
+#endif
+
 	LL_GPIO_SetPinOutputType(gpio, pin_ll, otype >> STM32_OTYPER_SHIFT);
 
 	LL_GPIO_SetPinSpeed(gpio, pin_ll, ospeed >> STM32_OSPEEDR_SHIFT);
@@ -183,6 +193,7 @@ const int gpio_stm32_enable_int(int port, int pin)
 	defined(CONFIG_SOC_SERIES_STM32F3X) || \
 	defined(CONFIG_SOC_SERIES_STM32F4X) || \
 	defined(CONFIG_SOC_SERIES_STM32F7X) || \
+	defined(CONFIG_SOC_SERIES_STM32L1X) || \
 	defined(CONFIG_SOC_SERIES_STM32L4X)
 	struct device *clk = device_get_binding(STM32_CLOCK_CONTROL_NAME);
 	struct stm32_pclken pclken = {
